@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [FullRegressionSuite]" guice-stage="DEVELOPMENT" verbose="0">
+  <test thread-count="5" name="Combined Core + Advanced Tests(failed)" verbose="0">
+    <parameter name="platformVersion" value="13"/>
+    <parameter name="deviceName" value="emulator-5554"/>
+    <classes>
+      <class name="tests.CombinedApiDemosTests">
+        <methods>
+          <include name="setUp"/>
+          <include name="tearDown"/>
+          <include name="setupReport"/>
+          <include name="testKeyboardShowsAndHidesOnTextField"/>
+          <include name="testTextInputFieldAcceptsAndRetainsValue"/>
+          <include name="flushReport"/>
+        </methods>
+      </class> <!-- tests.CombinedApiDemosTests -->
+    </classes>
+  </test> <!-- Combined Core + Advanced Tests(failed) -->
+  <test thread-count="5" name="Enterprise Test Categories(failed)" verbose="0">
+    <parameter name="platformVersion" value="13"/>
+    <parameter name="deviceName" value="emulator-5554"/>
+    <classes>
+      <class name="tests.EnterpriseTestSuite">
+        <methods>
+          <include name="setUp"/>
+          <include name="tearDown"/>
+          <include name="setupReport"/>
+          <include name="negative_EmptyInputDoesNotCrashApp"/>
+          <include name="flushReport"/>
+        </methods>
+      </class> <!-- tests.EnterpriseTestSuite -->
+    </classes>
+  </test> <!-- Enterprise Test Categories(failed) -->
+</suite> <!-- Failed suite [FullRegressionSuite] -->
