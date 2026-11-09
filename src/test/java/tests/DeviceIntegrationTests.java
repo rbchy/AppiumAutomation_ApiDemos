@@ -75,7 +75,7 @@ public class DeviceIntegrationTests extends BaseTest {
         driver.openNotifications();
         try {
             Assert.assertTrue(new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .until(d -> "com.android.systemui".equals(d.getCurrentPackage())
+                    .until(d -> "com.android.systemui".equals(driver.getCurrentPackage())
                             || d.getPageSource().contains("com.android.systemui")), "Notification shade did not open");
             System.out.println("[shade] " + driver.getPageSource().replaceAll("(?s).*?text=\"([^\"]*)\"", "$1 | ").replaceAll("(?s)\\|[^|]*$", ""));
         } finally {
