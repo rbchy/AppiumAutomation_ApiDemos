@@ -129,7 +129,12 @@ public class EnterpriseTestSuite extends BaseTest {
         textPage.enterText("temporary");
         textPage.clear();
 
-        Assert.assertEquals(textPage.getEnteredText(), "", "Field should be empty after clearing");
+        // an empty EditText reports its hint ("hint text") as its text
+        String shown = textPage.getEnteredText();
+        String hint = textPage.field().getAttribute("hint");
+        Assert.assertFalse(shown.contains("temporary"), "Typed text still in the field: " + shown);
+        Assert.assertTrue(shown.isEmpty() || shown.equals(hint),
+                "Field should be empty (showing only its hint '" + hint + "'), but shows: " + shown);
         Assert.assertEquals(driver.getCurrentPackage(), APP_PACKAGE, "App left the foreground");
         Assert.assertTrue(textPage.field().isDisplayed(), "Screen no longer usable after empty input");
     }

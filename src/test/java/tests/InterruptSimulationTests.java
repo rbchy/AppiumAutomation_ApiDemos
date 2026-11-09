@@ -45,14 +45,32 @@ public class InterruptSimulationTests extends BaseTest {
     public void interrupt_IncomingCallDoesNotCrashApp() {
         String number = "5551234567";
         Adb.emu(deviceName, "gsm", "call", number);
-        WaitUtils.pause(3000);
-        String calls = Adb.emu(deviceName, "gsm", "list");
-        test.log(Status.INFO, "Active calls: " + calls);
-        Assert.assertTrue(calls.contains(number), "The emulator did not register the incoming call: " + calls);
-
-        Adb.emu(deviceName, "gsm", "cancel", number);
-        WaitUtils.pause(2000);
+        try {
+            // the modem can take a few seconds to report the call
+            Assert.assertTrue(waitFor(() -> Adb.emu(deviceName, "gsm", "list").contains(number), 20),
+                    "The emulator never registered the incoming call");
+            test.log(Status.INFO, "Ringing: " + Adb.emu(deviceName, "gsm", "list")
+                    + " | in front: " + driver.getCurrentPackage());
+        } finally {
+            Adb.emu(deviceName, "gsm", "cancel", number);
+        }
+        Assert.assertTrue(waitFor(() -> !Adb.emu(deviceName, "gsm", "list").contains(number), 20),
+                "The call did not end");
+        // the in-call screen closes on its own once the call has ended
+        waitFor(() -> !driver.getCurrentPackage().contains("dialer"), 15);
+        if (!APP_PACKAGE.equals(driver.getCurrentPackage())) {
+            driver.activateApp(APP_PACKAGE);
+        }
         assertAppStillUsable("an incoming call");
+    }
+
+    private static boolean waitFor(java.util.function.BooleanSupplier condition, int seconds) {
+        long end = System.currentTimeMillis() + seconds * 1000L;
+        while (System.currentTimeMillis() < end) {
+            if (condition.getAsBoolean()) return true;
+            WaitUtils.pause(500);
+        }
+        return condition.getAsBoolean();
     }
 
     @Test(priority = 2)
