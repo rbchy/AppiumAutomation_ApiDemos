@@ -70,6 +70,8 @@ public class DeviceIntegrationTests extends BaseTest {
             test.log(Status.INFO, "Notification from API Demos visible in the shade: " + shown);
             Assert.assertTrue(shown, "No API Demos notification in the shade");
         } catch (org.openqa.selenium.TimeoutException e) {
+            System.out.println("[logcat] " + Adb.shell(deviceName,
+                    "logcat -d | grep -iE 'channel|notification' | grep -i -E 'apis|appium' | tail -5 || true"));
             System.out.println("[shade] " + driver.getPageSource().replaceAll("(?s).*?text=\"([^\"]*)\"", "$1 | ").replaceAll("(?s)\\|[^|]*$", ""));
             throw e;
         } finally {

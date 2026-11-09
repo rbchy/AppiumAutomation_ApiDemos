@@ -66,7 +66,20 @@ public class InterruptSimulationTests extends BaseTest {
         if (!APP_PACKAGE.equals(driver.getCurrentPackage())) {
             driver.activateApp(APP_PACKAGE);
         }
+        assertNotificationShown("Missed call");
         assertAppStillUsable("an incoming call");
+    }
+
+    /** Opens the notification shade, checks it shows the text, closes it again. */
+    private void assertNotificationShown(String text) {
+        driver.openNotifications();
+        try {
+            Assert.assertTrue(waitFor(() -> driver.getPageSource().contains(text), 15),
+                    "No notification with '" + text + "' in the shade");
+        } finally {
+            driver.pressKey(new io.appium.java_client.android.nativekey.KeyEvent(
+                    io.appium.java_client.android.nativekey.AndroidKey.BACK));
+        }
     }
 
     private static boolean waitFor(java.util.function.BooleanSupplier condition, int seconds) {
@@ -80,8 +93,9 @@ public class InterruptSimulationTests extends BaseTest {
 
     @Test(priority = 2)
     public void interrupt_IncomingSmsDoesNotCrashApp() {
-        Adb.emu(deviceName, "sms", "send", "5551234567", "Test SMS interrupt");
-        WaitUtils.pause(2000);
+        String message = "Test SMS interrupt " + System.currentTimeMillis() % 10000;
+        Adb.emu(deviceName, "sms", "send", "5551234567", message);
+        assertNotificationShown(message);
         assertAppStillUsable("an incoming SMS");
     }
 
