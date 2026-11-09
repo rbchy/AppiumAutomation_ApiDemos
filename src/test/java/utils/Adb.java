@@ -19,6 +19,11 @@ public final class Adb {
         return run(cmd);
     }
 
+    /** {@code adb -s <device> shell <command>}. */
+    public static String shell(String device, String command) {
+        return run(List.of("adb", "-s", device, "shell", command));
+    }
+
     private static String run(List<String> cmd) {
         try {
             Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();

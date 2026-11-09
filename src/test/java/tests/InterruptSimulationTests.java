@@ -47,8 +47,13 @@ public class InterruptSimulationTests extends BaseTest {
         Adb.emu(deviceName, "gsm", "call", number);
         try {
             // the modem can take a few seconds to report the call
-            Assert.assertTrue(waitFor(() -> Adb.emu(deviceName, "gsm", "list").contains(number), 20),
-                    "The emulator never registered the incoming call");
+            boolean ringing = waitFor(() -> {
+                String list = Adb.emu(deviceName, "gsm", "list");
+                String state = Adb.shell(deviceName, "dumpsys telephony.registry | grep -m1 mCallState || true");
+                System.out.println("[call] gsm list=" + list.replace("\n", " / ") + " | " + state.trim());
+                return list.contains(number) || state.contains("mCallState=1");
+            }, 30);
+            Assert.assertTrue(ringing, "The emulator never registered the incoming call");
             test.log(Status.INFO, "Ringing: " + Adb.emu(deviceName, "gsm", "list")
                     + " | in front: " + driver.getCurrentPackage());
         } finally {

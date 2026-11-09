@@ -12,6 +12,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.MainScreenPage;
 import pages.TextScreenPage;
+import utils.Adb;
 import utils.ExtentReportManager;
 
 import java.time.Duration;
@@ -46,6 +47,12 @@ public class DeviceIntegrationTests extends BaseTest {
     /** App › Notification › IncomingMessage posts a notification that shows up in the shade. */
     @Test(priority = 2, groups = "notifications")
     public void notification_AppNotificationAppearsInShade() {
+        // Android 13+: legacy apps also need the notification permission
+        try {
+            Adb.shell(deviceName, "pm grant " + APP_PACKAGE + " android.permission.POST_NOTIFICATIONS");
+        } catch (IllegalStateException e) {
+            System.out.println("[notification] " + e.getMessage());
+        }
         mainPage.clickMenuItemByText("App");
         mainPage.scrollToAndClick("Notification");
         mainPage.clickMenuItemByText("IncomingMessage");
@@ -59,8 +66,12 @@ public class DeviceIntegrationTests extends BaseTest {
         try {
             boolean shown = new WebDriverWait(driver, Duration.ofSeconds(10))
                     .until(d -> d.getPageSource().contains("API Demos"));
+            System.out.println("[shade] " + driver.getPageSource().replaceAll("(?s).*?text=\"([^\"]*)\"", "$1 | ").replaceAll("(?s)\\|[^|]*$", ""));
             test.log(Status.INFO, "Notification from API Demos visible in the shade: " + shown);
             Assert.assertTrue(shown, "No API Demos notification in the shade");
+        } catch (org.openqa.selenium.TimeoutException e) {
+            System.out.println("[shade] " + driver.getPageSource().replaceAll("(?s).*?text=\"([^\"]*)\"", "$1 | ").replaceAll("(?s)\\|[^|]*$", ""));
+            throw e;
         } finally {
             driver.pressKey(new KeyEvent(AndroidKey.BACK));
         }
