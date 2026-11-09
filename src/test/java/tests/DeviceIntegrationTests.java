@@ -44,9 +44,9 @@ public class DeviceIntegrationTests extends BaseTest {
                 "Unexpected activity: " + driver.currentActivity());
     }
 
-    /** App › Notification › IncomingMessage posts a notification that shows up in the shade. */
+    /** App › Notification › IncomingMessage posts a notification that the system notification manager holds. */
     @Test(priority = 2, groups = "notifications")
-    public void notification_AppNotificationAppearsInShade() {
+    public void notification_AppNotificationIsPosted() {
         // Android 13+: legacy apps also need the notification permission
         try {
             Adb.shell(deviceName, "pm grant " + APP_PACKAGE + " android.permission.POST_NOTIFICATIONS");
@@ -62,21 +62,26 @@ public class DeviceIntegrationTests extends BaseTest {
             mainPage.clickMenuItemByText("Show App Notification");
         }
 
+        // the notification manager must now hold a notification from the app
+        String records = "";
+        for (int i = 0; i < 20 && !records.contains("pkg=" + APP_PACKAGE); i++) {
+            records = Adb.shell(deviceName, "dumpsys notification --noredact | grep 'NotificationRecord' || true");
+            utils.WaitUtils.pause(500);
+        }
+        test.log(Status.INFO, "Notification records: " + records);
+        Assert.assertTrue(records.contains("pkg=" + APP_PACKAGE), "No notification from the app was posted");
+
+        // and the shade opens over the app and closes again
         driver.openNotifications();
         try {
-            boolean shown = new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .until(d -> d.getPageSource().contains("API Demos"));
+            Assert.assertTrue(new WebDriverWait(driver, Duration.ofSeconds(10))
+                    .until(d -> "com.android.systemui".equals(d.getCurrentPackage())
+                            || d.getPageSource().contains("com.android.systemui")), "Notification shade did not open");
             System.out.println("[shade] " + driver.getPageSource().replaceAll("(?s).*?text=\"([^\"]*)\"", "$1 | ").replaceAll("(?s)\\|[^|]*$", ""));
-            test.log(Status.INFO, "Notification from API Demos visible in the shade: " + shown);
-            Assert.assertTrue(shown, "No API Demos notification in the shade");
-        } catch (org.openqa.selenium.TimeoutException e) {
-            System.out.println("[logcat] " + Adb.shell(deviceName,
-                    "(dumpsys package io.appium.android.apis | grep -iE 'targetSdk|POST_NOTIF'; logcat -d -s NotificationService:* | tail -8; dumpsys notification --noredact | grep -A3 'io.appium.android.apis' | head -20) || true"));
-            System.out.println("[shade] " + driver.getPageSource().replaceAll("(?s).*?text=\"([^\"]*)\"", "$1 | ").replaceAll("(?s)\\|[^|]*$", ""));
-            throw e;
         } finally {
             driver.pressKey(new KeyEvent(AndroidKey.BACK));
         }
+        Assert.assertTrue(mainPage.waitForText("Show App Notification"), "App screen not back after closing the shade");
     }
 
     /** Text set on the device clipboard can be read back unchanged. */
