@@ -5,6 +5,15 @@ set -uo pipefail
 SUITE="$1"; NAME="$2"
 
 adb devices
+# boot_completed can be reported before system services are up; wait until they answer
+for i in $(seq 1 90); do
+  if adb shell settings get global device_provisioned 2>/dev/null | grep -q 1 \
+     && adb shell pm path android 2>/dev/null | grep -q package; then
+    echo "Android services ready after $((i*2)) s"; break
+  fi
+  sleep 2
+done
+adb shell input keyevent 82 || true   # dismiss the lock screen if shown
 adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
