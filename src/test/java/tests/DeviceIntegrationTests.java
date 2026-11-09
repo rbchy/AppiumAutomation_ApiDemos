@@ -71,7 +71,7 @@ public class DeviceIntegrationTests extends BaseTest {
             Assert.assertTrue(shown, "No API Demos notification in the shade");
         } catch (org.openqa.selenium.TimeoutException e) {
             System.out.println("[logcat] " + Adb.shell(deviceName,
-                    "logcat -d | grep -iE 'channel|notification' | grep -i -E 'apis|appium' | tail -5 || true"));
+                    "(dumpsys package io.appium.android.apis | grep -iE 'targetSdk|POST_NOTIF'; logcat -d -s NotificationService:* | tail -8; dumpsys notification --noredact | grep -A3 'io.appium.android.apis' | head -20) || true"));
             System.out.println("[shade] " + driver.getPageSource().replaceAll("(?s).*?text=\"([^\"]*)\"", "$1 | ").replaceAll("(?s)\\|[^|]*$", ""));
             throw e;
         } finally {
